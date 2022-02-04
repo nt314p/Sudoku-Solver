@@ -13,11 +13,19 @@ constexpr auto BOARD_LENGTH = SIDE_LENGTH * SIDE_LENGTH;
 class Solver
 {
 private:
-	/* A one dimensional array containing elements representing the board cells row by row.
+	/* A 1d array containing elements representing the 2d board cells row by row.
 	   Each element is a bit field which represents what possible numbers can go in that cell.
 	   If the nth bit is set (zero indexed), it is valid for the number n+1 to go there.
 	*/
-	std::bitset<SIDE_LENGTH> cells[BOARD_LENGTH];
+	UInt16 cells[BOARD_LENGTH];
+
+	/* A 1d array representing a 3x3x9 array. It is indexed as x = [boxRow][boxCol][n], where
+	   x is the number of times the number n + 1 can be placed within cells in the box at
+	   (boxRow, boxCol) ([0..2], [0..2]). 
+	   Accessed as arr[boxRow * BOX_LENGTH * SIDE_LENGTH + boxCol * SIDE_LENGTH + n]
+	*/
+	UInt16 boxPossibleNumberCount[BOX_LENGTH * BOX_LENGTH * SIDE_LENGTH];
+
 	int board[BOARD_LENGTH];
 
 public:
