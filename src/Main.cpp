@@ -2,12 +2,27 @@
 #include <chrono>
 #include "Solver.h"
 
+/*
+070200003
+400800700
+013000000
+500900400
+700020060
+000000000
+200050900
+105060004
+000010300
+*/
+// 10 us
+
+
+
 int main()
 {
-	const int trials = 100000;
-	long* timingsUs = new long[trials];
+	const int trials = 200000;
+	long* timingsUs = new long[trials] {};
 
-	int board[BOARD_LENGTH]{
+	char board[BOARD_LENGTH]{
 		2, 0, 6, 3, 7, 0, 0, 0, 0,
 		5, 1, 0, 4, 0, 0, 7, 0, 0,
 		4, 3, 0, 0, 6, 0, 0, 0, 8,
@@ -17,32 +32,47 @@ int main()
 		0, 4, 0, 0, 0, 0, 0, 5, 7,
 		0, 7, 5, 0, 9, 6, 2, 0, 0,
 		0, 0, 1, 7, 4, 0, 3, 9, 6,
-	}; // 1.4 us
+	}; // 1.2 us
 
-	//char c;
+	char tempBoard[BOARD_LENGTH]{};
 
-	//for (int i = 0; i < BOARD_LENGTH; i++)
-	//{
-	//	std::cin >> c;
-	//	board[i] = c - '0';
-	//}
+	char c;
 
-	Solver s(board);
-
-	s.PrintCells();
-	s.PrintBoard();
-	
-	for (int i = 0; i < trials; i++) 
+	for (int i = 0; i < BOARD_LENGTH; i++)
 	{
-		s = Solver(board);
-		auto start = std::chrono::steady_clock::now();
-		s.Solve();
-		auto end = std::chrono::steady_clock::now();
-		timingsUs[i] = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
+		std::cin >> c;
+		board[i] = c - '0';
 	}
-	
-	s.PrintCells();
-	s.PrintBoard();
+
+	memcpy(tempBoard, board, BOARD_LENGTH * sizeof(char));
+
+	PrintBoard(tempBoard);
+	Solve(tempBoard);
+
+	if (true)
+	{
+		for (int i = 0; i < trials; i++)
+		{
+			memcpy(tempBoard, board, BOARD_LENGTH * sizeof(char));
+			auto start = std::chrono::steady_clock::now();
+			Solve(tempBoard);
+			auto end = std::chrono::steady_clock::now();
+			timingsUs[i] = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
+		}
+	}
+
+	std::cout << std::endl;
+
+	PrintBoard(tempBoard);
+
+	if (VerifyBoard(tempBoard))
+	{
+		std::cout << "Board solved!" << std::endl;
+	}
+	else
+	{
+		std::cout << "Board NOT solved!" << std::endl;
+	}
 
 	long sum = 0;
 	for (int i = 0; i < trials; i++)
@@ -51,7 +81,7 @@ int main()
 	}
 
 	double avg = sum / (double)trials;
-	
+
 	std::cout << "Average solve time: " << avg << " us" << std::endl;
 
 	delete[] timingsUs;
