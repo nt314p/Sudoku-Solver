@@ -2,6 +2,8 @@
 #include <chrono>
 #include "Solver.h"
 
+// 003000009000070000200580300080150004000007500100009000040000060000001000800230900
+
 /*
 070200003
 400800700
@@ -13,13 +15,11 @@
 105060004
 000010300
 */
-// 10 us
-
-
+// 133 us
 
 int main()
 {
-	const int trials = 200000;
+	const int trials = 100000;
 	long* timingsUs = new long[trials] {};
 
 	char board[BOARD_LENGTH]{
@@ -44,7 +44,7 @@ int main()
 		board[i] = c - '0';
 	}
 
-	memcpy(tempBoard, board, BOARD_LENGTH * sizeof(char));
+	memcpy(tempBoard, board, sizeof(board));
 
 	PrintBoard(tempBoard);
 	Solve(tempBoard);
@@ -74,15 +74,16 @@ int main()
 		std::cout << "Board NOT solved!" << std::endl;
 	}
 
-	long sum = 0;
+	long totalTimeUs = 0;
 	for (int i = 0; i < trials; i++)
 	{
-		sum += timingsUs[i];
+		totalTimeUs += timingsUs[i];
 	}
 
-	double avg = sum / (double)trials;
+	double averageTimeUs = totalTimeUs / (double)trials;
 
-	std::cout << "Average solve time: " << avg << " us" << std::endl;
+	std::cout << "Average solve time: " << averageTimeUs << " us" << std::endl;
+
 
 	delete[] timingsUs;
 	std::cin.get();
