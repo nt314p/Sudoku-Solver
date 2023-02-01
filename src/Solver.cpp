@@ -1,9 +1,9 @@
 #include "Solver.h"
 
-inline bool TryUpdateCell(UInt16(&cells)[BOARD_LENGTH], int index, UInt16 mask)
+inline bool TryUpdateCell(Cell(&cells)[BOARD_LENGTH], int index, Cell mask)
 {
-	UInt16 cell = cells[index];
-	UInt16 maskedCell = cell & ~mask;
+	Cell cell = cells[index];
+	Cell maskedCell = cell & ~mask;
 
 	if (cell != 0 && maskedCell == 0) return false;
 
@@ -16,7 +16,7 @@ Attempts to place the number at the given index
 Returns false if placing the number resulted in an invalid board state
 Otherwise returns true
 */
-bool PlaceNumber(char(&board)[BOARD_LENGTH], UInt16(&cells)[BOARD_LENGTH], int index, int number)
+bool PlaceNumber(char(&board)[BOARD_LENGTH], Cell(&cells)[BOARD_LENGTH], int index, int number)
 {
 	int row = index / 9;
 	int column = index - row * 9;
@@ -25,8 +25,8 @@ bool PlaceNumber(char(&board)[BOARD_LENGTH], UInt16(&cells)[BOARD_LENGTH], int i
 
 	int zeroIndexedNumber = number - 1;
 
-	UInt16 cell;
-	UInt16 mask = 1 << zeroIndexedNumber;
+	Cell cell;
+	Cell mask = 1 << zeroIndexedNumber;
 
 	if ((cells[index] & mask) == 0) std::cerr << "Cannot place number!" << std::endl;
 
@@ -35,7 +35,6 @@ bool PlaceNumber(char(&board)[BOARD_LENGTH], UInt16(&cells)[BOARD_LENGTH], int i
 
 	// TODO:
 	// create a queue to add all single cell possibilities to
-
 
 	int computedRow = row * SIDE_LENGTH;
 
@@ -50,7 +49,7 @@ bool PlaceNumber(char(&board)[BOARD_LENGTH], UInt16(&cells)[BOARD_LENGTH], int i
 
 	for (int i = 0; i < SIDE_LENGTH; i++)
 	{
-		cell = cells[i*SIDE_LENGTH + column];
+		cell = cells[i * SIDE_LENGTH + column];
 
 		if (cell != 0 && cell == mask) return false;
 
@@ -68,9 +67,8 @@ bool PlaceNumber(char(&board)[BOARD_LENGTH], UInt16(&cells)[BOARD_LENGTH], int i
 	return true;
 }
 
-bool SolveRecursive(char(&board)[BOARD_LENGTH], UInt16(&cells)[BOARD_LENGTH], int firstCellIndex)
+bool SolveRecursive(char(&board)[BOARD_LENGTH], Cell(&cells)[BOARD_LENGTH], int firstCellIndex)
 {
-	//std::cout << "Reached another recursive call: " << firstCellIndex << std::endl;
 	bool isSolved = false;
 
 	bool updated = false; // has a value been updated?
@@ -90,7 +88,7 @@ bool SolveRecursive(char(&board)[BOARD_LENGTH], UInt16(&cells)[BOARD_LENGTH], in
 		previousCellSolved = true;
 		possibilityThresholdSatisfied = false;
 
-		UInt16 cell;
+		Cell cell;
 
 		// modify for loop to pop off queue
 		for (int index = firstCellIndex; index < BOARD_LENGTH; index++)
@@ -108,8 +106,9 @@ bool SolveRecursive(char(&board)[BOARD_LENGTH], UInt16(&cells)[BOARD_LENGTH], in
 			isSolved = false;
 			int possibleNumberCount = 0;
 
-			UInt16 testBit = 1;
+			Cell testBit = 1;
 
+			// create an array of the possible numbers to try in the current cell
 			for (int n = 1; n <= SIDE_LENGTH; n++)
 			{
 				if (cell & testBit) // is the bit set?
@@ -123,22 +122,12 @@ bool SolveRecursive(char(&board)[BOARD_LENGTH], UInt16(&cells)[BOARD_LENGTH], in
 
 			if (possibleNumberCount == 1) // cell only has a single number possibility
 			{
-				//std::cout << "Placing " << lastNumber << " at index " << index << std::endl;
-				//PrintCells(cells);
-				//std::cout << "\n\n" << std::endl;
-
 				updated = true;
 				shouldGuess = false;
 				if (!PlaceNumber(board, cells, index, possibleNumbers[0]))
 				{
-					//std::cout << "Placing number resulted in invalid state" << std::endl;
-					return false;
+					return false; // Placing number resulted in an invalid state
 				}
-
-				//PrintCells(cells);
-				//std::cout << "\n\n" << std::endl;
-				//PrintBoard(board);
-				//std::cout << "\n\n" << std::endl;
 			}
 			else if (shouldGuess) // guess
 			{
@@ -147,41 +136,29 @@ bool SolveRecursive(char(&board)[BOARD_LENGTH], UInt16(&cells)[BOARD_LENGTH], in
 				possibilityThresholdSatisfied = true;
 				possibilityCountThreshold = DEFAULT_POSSIBILITY_THRESHOLD;
 
-				//std::cout << "Guessing..." << std::endl;
-				//PrintBoard(board);
-
 				char tempBoard[BOARD_LENGTH];
-				UInt16 tempCells[BOARD_LENGTH];
+				Cell tempCells[BOARD_LENGTH];
 
+				// begin guessing the possible numbers
 				for (int i = 0; i < possibleNumberCount; i++)
 				{
 					memcpy(tempBoard, board, sizeof(board));
 					memcpy(tempCells, cells, sizeof(cells));
 
-					//std::cout << "Guessing " << possibleNumbers[i] << " at index " << index << std::endl;
-					//PrintCells(tempCells);
-					//std::cout << "\n\n" << std::endl;
-
 					if (!PlaceNumber(tempBoard, tempCells, index, possibleNumbers[i]))
 					{
-						//std::cout << "Guess resulted in invalid state" << std::endl;
 						continue; // the attempt to place the number resulted in an invalid board state
 					}
-
-					//PrintCells(tempCells);
-					//std::cout << "\n\n" << std::endl;
 
 					if (SolveRecursive(tempBoard, tempCells, firstCellIndex))
 					{
 						memcpy(board, tempBoard, BOARD_LENGTH * sizeof(char)); // copy solved data back
-						memcpy(cells, tempCells, BOARD_LENGTH * sizeof(UInt16));
-						return true;
+						memcpy(cells, tempCells, BOARD_LENGTH * sizeof(Cell));
+						return true; // the number placement was valid
 					}
-					//std::cout << "Incorrect guess" << std::endl;
 				}
 
-				//std::cout << "No possibilities worked, backtracking..." << std::endl;
-				return false;
+				return false; // No numbers worked, backtrack
 			}
 		}
 
@@ -189,24 +166,10 @@ bool SolveRecursive(char(&board)[BOARD_LENGTH], UInt16(&cells)[BOARD_LENGTH], in
 		if (shouldGuess && !possibilityThresholdSatisfied)
 		{
 			possibilityCountThreshold++;
-			//std::cout << "No cells satisfy possibility threshold, increased to " << possibilityCountThreshold << std::endl;
 		}
 
 		if (!updated) shouldGuess = true; // we have gone through the board and changed nothing
 	}
-
-	//for (int index = 0; index < BOARD_LENGTH; index++)
-	//{
-	//	if (board[index] == 0)
-	//	{
-	//		std::cout << "Board has unsolved cells, backtracking..." << std::endl;
-	//		return false;
-	//	}
-	//}
-
-	//PrintCells(cells);
-
-	//if (!VerifyBoard(board)) return false;
 
 	return true;
 }
@@ -217,7 +180,7 @@ bool Solve(char(&board)[BOARD_LENGTH])
 	   Each element is a bit field which represents what possible numbers can go in that cell.
 	   If the nth bit is set (zero indexed), it is valid for the number n+1 to go there.
 	*/
-	UInt16 cells[BOARD_LENGTH]{};
+	Cell cells[BOARD_LENGTH]{};
 
 	for (int i = 0; i < BOARD_LENGTH; i++)
 	{
@@ -240,15 +203,15 @@ bool Solve(char(&board)[BOARD_LENGTH])
 	return SolveRecursive(board, cells, 0);
 }
 
-bool CanPlaceNumber(UInt16(&cells)[BOARD_LENGTH], int index, int number)
+bool CanPlaceNumber(Cell(&cells)[BOARD_LENGTH], int index, int number)
 {
 	return cells[index] & 1 << (number - 1);
 }
 
 bool VerifyBoard(char(&board)[BOARD_LENGTH])
 {
-	UInt16 cellRow;
-	UInt16 cellColumn;
+	Cell cellRow;
+	Cell cellColumn;
 	for (int i = 0; i < SIDE_LENGTH; i++)
 	{
 		cellRow = 0;
@@ -265,13 +228,13 @@ bool VerifyBoard(char(&board)[BOARD_LENGTH])
 	return true;
 }
 
-void PrintCells(UInt16(&cells)[BOARD_LENGTH])
+void PrintCells(Cell(&cells)[BOARD_LENGTH])
 {
 	char buffer[11]{};
 	buffer[9] = ' ';
 	buffer[10] = '\0';
 
-	UInt16 cell;
+	Cell cell;
 	for (int i = 0; i < BOARD_LENGTH; i++)
 	{
 		cell = cells[i];

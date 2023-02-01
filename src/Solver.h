@@ -3,7 +3,7 @@
 #include <iostream>
 
 using String = std::string;
-using UInt16 = std::uint16_t;
+using Cell = std::uint_fast16_t;
 
 constexpr auto BOX_LENGTH = 3;
 constexpr auto SIDE_LENGTH = 9;
@@ -17,5 +17,5 @@ accessed through the reference passed in
 */
 bool Solve(char(&board)[BOARD_LENGTH]);
 void PrintBoard(char(&board)[BOARD_LENGTH]);
-void PrintCells(UInt16(&cells)[BOARD_LENGTH]);
+void PrintCells(Cell(&cells)[BOARD_LENGTH]);
 bool VerifyBoard(char(&board)[BOARD_LENGTH]);

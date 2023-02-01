@@ -19,7 +19,7 @@
 
 int main()
 {
-	const int trials = 100000;
+	const int trials = 10000;
 	long* timingsUs = new long[trials] {};
 
 	char board[BOARD_LENGTH]{
